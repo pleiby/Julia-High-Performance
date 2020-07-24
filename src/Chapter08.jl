@@ -25,13 +25,18 @@ end
     @async sin.(rand(1000, 1000))
 end
 
+# calls to c, even if done asynchronously, cannot be task-scheduled
+#  (do not yield) and run consecutively (serially).
+# once you call into a C function from Julia, the scheduler can no longer
+# interrupt that code. Even if I/O or sleep occurs on the C side,
+# from Julia's perspective, it is a blocking call
 @time @sync for i in 1:5
     @async ccall(("sleep", :libc), Cint, (Cint, ), 1)
 end
 
 # ### Task Lifecycle
 
-t=Task(()->println("Hello from tasks"))
+t = Task(()->println("Hello from tasks"))
 
 schedule(t)
 
